@@ -94,6 +94,10 @@
         .btn-outline:hover { background: var(--primary); color: white; }
         .btn-sm { padding: 6px 16px; font-size: 0.85rem; }
         .btn-block { width: 100%; justify-content: center; }
+        .search-bar { display: flex; gap: 10px; margin: 20px 0; flex-wrap: wrap; }
+        .search-input { flex: 1; min-width: 200px; padding: 10px 16px; border-radius: 50px; border: 1px solid var(--border); font-size: 0.95rem; background: white; }
+        .search-input:focus { outline: none; border-color: var(--primary); }
+        .sort-select { padding: 10px 16px; border-radius: 50px; border: 1px solid var(--border); font-size: 0.9rem; background: white; }
 
         .hero {
             margin-top: 70px; padding: 70px 30px 50px; text-align: center;
@@ -313,6 +317,15 @@
         .admin-order-items { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
         .admin-order-total { font-weight: 800; color: var(--primary); }
         .admin-empty { text-align: center; color: var(--text-muted); padding: 30px; }
+        .order-status { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+        .status-new { background: #e3f2fd; color: #1565c0; }
+        .status-confirmed { background: #fff3e0; color: #e65100; }
+        .status-processing { background: #f3e5f5; color: #7b1fa2; }
+        .status-shipped { background: #e8f5e9; color: #2e7d32; }
+        .status-delivered { background: #e8f5e9; color: #1b5e20; }
+        .status-cancelled { background: #fce4ec; color: #c62828; }
+        .admin-order-status { margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+        .admin-order-status select { padding: 4px 8px; border-radius: 12px; border: 1px solid var(--border); font-size: 0.8rem; background: white; }
 
         .scroll-top-btn {
             position: fixed; bottom: 25px; right: 25px; width: 42px; height: 42px;
@@ -389,6 +402,16 @@
 </section>
 
 <div class="container">
+
+<div class="search-bar">
+    <input type="text" class="search-input" id="searchInput" placeholder="🔍 ابحث عن منتج...">
+    <select class="sort-select" id="sortSelect">
+        <option value="">ترتيب: الافتراضي</option>
+        <option value="price-asc">السعر: من الأقل</option>
+        <option value="price-desc">السعر: من الأعلى</option>
+        <option value="name">الاسم: أ-ي</option>
+    </select>
+</div>
 
 <section class="section" id="jackets">
     <div class="section-header"><h2 class="section-title">🧥 جاكيتات الشيفات</h2></div>
@@ -521,13 +544,24 @@
                     <label>ملاحظات (اختياري)</label>
                     <textarea id="checkoutNotes" placeholder="أي ملاحظات إضافية"></textarea>
                 </div>
+                <div class="form-group">
+                    <label>طريقة الدفع *</label>
+                    <div style="display:flex;gap:10px;flex-wrap:wrap">
+                        <label style="flex:1;min-width:120px;padding:10px;border:2px solid var(--primary);border-radius:var(--radius-md);text-align:center;cursor:pointer;font-weight:700;background:var(--primary);color:white">
+                            <input type="radio" name="paymentMethod" value="vodafone" checked hidden> 💳 فودافون كاش
+                        </label>
+                        <label style="flex:1;min-width:120px;padding:10px;border:2px solid var(--border);border-radius:var(--radius-md);text-align:center;cursor:pointer;font-weight:700;color:var(--text)">
+                            <input type="radio" name="paymentMethod" value="cod" hidden> 💵 الدفع عند الاستلام
+                        </label>
+                    </div>
+                </div>
                 <button class="btn btn-primary btn-block" type="submit">متابعة للدفع</button>
             </form>
         </div>
         <div id="checkoutStep2" class="checkout-hidden">
             <div class="checkout-summary" id="checkoutSummary"></div>
             <div class="order-code-box">📋 كود الطلب: <span id="orderCodeDisplay"></span></div>
-            <div class="payment-box">
+            <div class="payment-box" id="paymentVodafone">
                 <div style="font-weight:700;margin-bottom:5px">💳 الدفع عبر فودافون كاش</div>
                 <div class="payment-amount-num" id="paymentAmountNum">0 ج.م</div>
                 <div class="wallet-box">
@@ -535,6 +569,11 @@
                     <button class="btn-copy" id="copyWalletBtn">📋 نسخ</button>
                 </div>
                 <div style="font-size:0.8rem;color:var(--text-muted)">حول المبلغ على الرقم أعلاه وأرسل صورة التحويل</div>
+            </div>
+            <div class="payment-box" id="paymentCOD" style="display:none">
+                <div style="font-size:1.2rem;margin-bottom:8px">💵 الدفع عند الاستلام</div>
+                <div class="payment-amount-num">0 ج.م</div>
+                <div style="font-size:0.9rem;color:var(--text-muted)">ستدفع المبلغ عند استلام الطلب</div>
             </div>
             <a class="btn-whatsapp" id="whatsappConfirmBtn" href="#" target="_blank">
                 💬 تأكيد عبر واتساب
@@ -728,13 +767,14 @@
                 fields: [
                     { name: "📋 كود الطلب", value: orderData.code, inline: true },
                     { name: "📱 الهاتف", value: orderData.phone, inline: true },
+                    { name: "🔴 الحالة", value: orderData.status || "جديد", inline: true },
                     { name: "📧 البريد", value: orderData.email || "—", inline: true },
                     { name: "📍 المحافظة", value: orderData.governorate || "—", inline: true },
                     { name: "🏠 العنوان", value: orderData.address, inline: false },
                     { name: "📝 ملاحظات", value: orderData.notes || "—", inline: false },
                     { name: "💰 الإجمالي", value: formatPrice(orderData.total), inline: true },
                     { name: "🚚 التوصيل", value: formatPrice(orderData.deliveryFee || 0), inline: true },
-                    { name: "💳 طريقة الدفع", value: "فودافون كاش", inline: true }
+                    { name: "💳 طريقة الدفع", value: orderData.paymentMethod === "cod" ? "الدفع عند الاستلام" : "فودافون كاش", inline: true }
                 ],
                 description: orderData.items.map(i => `• ${i.name} × ${i.qty} = ${formatPrice(i.price * i.qty)}`).join("\n"),
                 timestamp: new Date().toISOString()
@@ -793,17 +833,28 @@
 
     function renderAllCategories() {
         ["jackets", "aprons", "caps", "pants", "soap", "toques"].forEach(cat => renderCategoryGrid(cat));
+        filterProducts();
     }
 
-    function renderCategoryGrid(category) {
-        const grid = document.querySelector(`.products-grid[data-category="${category}"]`);
-        if (!grid) return;
-        const items = products.filter(p => p.category === category);
-        if (!items.length) {
-            grid.innerHTML = `<p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:30px">لا توجد منتجات</p>`;
-            return;
-        }
-        grid.innerHTML = items.map(p => `
+    function filterProducts() {
+        const q = document.getElementById("searchInput")?.value.toLowerCase().trim() || "";
+        const sort = document.getElementById("sortSelect")?.value || "";
+        document.querySelectorAll(".section").forEach(section => {
+            const grid = section.querySelector(".products-grid");
+            if (!grid) return;
+            let items = products.filter(p => p.category === section.id);
+            if (q) items = items.filter(p => p.name.toLowerCase().includes(q) || (p.specs || []).some(s => s.toLowerCase().includes(q)));
+            if (sort === "price-asc") items.sort((a, b) => a.price - b.price);
+            else if (sort === "price-desc") items.sort((a, b) => b.price - a.price);
+            else if (sort === "name") items.sort((a, b) => a.name.localeCompare(b.name, "ar"));
+            grid.innerHTML = items.length ? items.map(p => productCardHTML(p)).join("") :
+                `<p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:30px">لا توجد نتائج</p>`;
+            section.style.display = items.length ? "" : "none";
+        });
+    }
+
+    function productCardHTML(p) {
+        return `
             <div class="product-card" data-id="${p.id}">
                 ${p.badge ? `<span class="product-badge badge-${p.badge}">${getBadgeText(p.badge)}</span>` : ""}
                 <img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy" onerror="this.src='https://placehold.co/400x300/f5f5f5/999?text=No+Image'">
@@ -824,7 +875,18 @@
                 </div>
                 <div class="product-view-hint">👆 اضغط للتفاصيل</div>
             </div>
-        `).join("");
+        `;
+    }
+
+    function renderCategoryGrid(category) {
+        const grid = document.querySelector(`.products-grid[data-category="${category}"]`);
+        if (!grid) return;
+        const items = products.filter(p => p.category === category);
+        if (!items.length) {
+            grid.innerHTML = `<p style="text-align:center;color:var(--text-muted);grid-column:1/-1;padding:30px">لا توجد منتجات</p>`;
+            return;
+        }
+        grid.innerHTML = items.map(p => productCardHTML(p)).join("");
     }
 
     function updateCartUI() {
@@ -984,6 +1046,7 @@
         const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
         const total = subtotal + deliveryFee;
         const code = generateOrderCode();
+        const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || "vodafone";
         const orderData = {
             code,
             phone,
@@ -994,6 +1057,8 @@
             deliveryFee,
             subtotal,
             total,
+            paymentMethod,
+            status: "جديد",
             items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
             date: new Date().toISOString()
         };
@@ -1002,8 +1067,15 @@
         document.getElementById("paymentAmountNum").textContent = formatPrice(total);
         document.getElementById("orderCodeDisplay").textContent = code;
 
+        const isCOD = paymentMethod === "cod";
+        document.getElementById("paymentVodafone").style.display = isCOD ? "none" : "block";
+        document.getElementById("paymentCOD").style.display = isCOD ? "block" : "none";
+
         const itemsText = cart.map(i => `• ${i.name} × ${i.qty} = ${formatPrice(i.price * i.qty)}`).join("\n");
-        const msg = `طلب جديد Smart Chef Uniform\n\n📋 كود: ${code}\n📱 ${phone}\n📍 ${govName} - ${orderData.address}${orderData.notes ? '\n📝 ' + orderData.notes : ''}\n\n${itemsText}\n\n🚚 التوصيل: ${formatPrice(deliveryFee)}\n💰 الإجمالي (شامل التوصيل): ${formatPrice(total)}\n\n💳 حول على فودافون كاش: ${VODAFONE_CASH}\n📲 أرسل صورة التحويل لتأكيد الطلب.`;
+        const paymentMsg = isCOD
+            ? `\n💵 الدفع عند الاستلام`
+            : `\n💳 حول على فودافون كاش: ${VODAFONE_CASH}\n📲 أرسل صورة التحويل لتأكيد الطلب.`;
+        const msg = `طلب جديد Smart Chef Uniform\n\n📋 كود: ${code}\n📱 ${phone}\n📍 ${govName} - ${orderData.address}${orderData.notes ? '\n📝 ' + orderData.notes : ''}\n\n${itemsText}\n\n🚚 التوصيل: ${formatPrice(deliveryFee)}\n💰 الإجمالي (شامل التوصيل): ${formatPrice(total)}${paymentMsg}`;
 
         document.getElementById("whatsappConfirmBtn").href = `https://wa.me/${WHATSAPP_OWNER}?text=${encodeURIComponent(msg)}`;
 
@@ -1019,10 +1091,11 @@
     }
 
     function finishOrder() {
+        const isCOD = currentOrder?.paymentMethod === "cod";
         cart = []; saveCart(); updateCartUI(); closeCheckout();
         document.getElementById("checkoutForm").reset();
         showCheckoutStep(1);
-        showToast("✅ شكراً! أرسل صورة التحويل على واتساب");
+        showToast(isCOD ? "✅ شكراً! سيتم التواصل معك لتأكيد الطلب" : "✅ شكراً! أرسل صورة التحويل على واتساب");
     }
 
     async function addProductToFirestore(data) {
@@ -1037,6 +1110,13 @@
         if (!confirm("حذف المنتج؟")) return;
         try { await deleteDoc(doc(db, "chef_products", id)); showToast("تم الحذف", "info"); }
         catch (e) { showToast("فشل الحذف", "error"); }
+    }
+    function updateOrderStatus(id, status) {
+        const order = orders.find(o => o.id === id);
+        if (!order) return;
+        updateDoc(doc(db, "chef_orders", id), { status }).then(() => {
+            showToast(`✅ تغيرت الحالة إلى: ${status}`);
+        }).catch(e => showToast("فشل تغيير الحالة", "error"));
     }
 
     function previewAdminImage(input) {
@@ -1186,20 +1266,34 @@
         const container = document.getElementById("adminOrdersList");
         if (!container) return;
         if (!orders.length) { container.innerHTML = '<p class="admin-empty">لا توجد طلبات بعد</p>'; return; }
+        const statusMap = { "جديد": "new", "مؤكد": "confirmed", "قيد التجهيز": "processing", "تم الشحن": "shipped", "تم التوصيل": "delivered", "ملغي": "cancelled" };
         container.innerHTML = orders.slice().reverse().map(o => {
             const items = (o.items || []).map(i => `${i.name} × ${i.qty}`).join("، ");
+            const statusClass = statusMap[o.status] || "new";
             return `
                 <div class="admin-order-item">
                     <div class="admin-order-header">
                         <span class="admin-order-code">📋 ${o.code || "—"}</span>
+                        <span class="order-status status-${statusClass}">${o.status || "جديد"}</span>
                         <span class="admin-order-date">${o.date ? new Date(o.date).toLocaleDateString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "—"}</span>
                     </div>
                     <div class="admin-order-info"><span>📱</span> ${o.phone || "—"} ${o.email ? '| <span>📧</span> ' + o.email : ''}</div>
-                    <div class="admin-order-info"><span>📍</span> ${o.governorate || ""} ${o.address || "—"}</div>
+                    <div class="admin-order-info"><span>📍</span> ${o.governorate || ""} ${o.address || "—"} ${o.deliveryFee ? '| 🚚 ' + formatPrice(o.deliveryFee) : ''}</div>
                     ${o.notes ? `<div class="admin-order-info"><span>📝</span> ${o.notes}</div>` : ""}
                     <div class="admin-order-items">${items}</div>
-                    ${o.deliveryFee ? `<div class="admin-order-info"><span>🚚</span> ${formatPrice(o.deliveryFee)}</div>` : ""}
+                    ${o.paymentMethod === "cod" ? '<div class="admin-order-info">💵 الدفع عند الاستلام</div>' : '<div class="admin-order-info">💳 فودافون كاش</div>'}
                     <div class="admin-order-total">💰 ${formatPrice(o.total)}</div>
+                    <div class="admin-order-status" data-order-id="${o.id}">
+                        <span>الحالة:</span>
+                        <select class="status-select">
+                            <option value="جديد" ${o.status === "جديد" ? "selected" : ""}>جديد</option>
+                            <option value="مؤكد" ${o.status === "مؤكد" ? "selected" : ""}>مؤكد</option>
+                            <option value="قيد التجهيز" ${o.status === "قيد التجهيز" ? "selected" : ""}>قيد التجهيز</option>
+                            <option value="تم الشحن" ${o.status === "تم الشحن" ? "selected" : ""}>تم الشحن</option>
+                            <option value="تم التوصيل" ${o.status === "تم التوصيل" ? "selected" : ""}>تم التوصيل</option>
+                            <option value="ملغي" ${o.status === "ملغي" ? "selected" : ""}>ملغي</option>
+                        </select>
+                    </div>
                 </div>
             `;
         }).join("");
@@ -1239,6 +1333,28 @@
         document.getElementById("checkoutForm").addEventListener("submit", submitCheckoutForm);
         document.getElementById("copyWalletBtn").addEventListener("click", copyWalletNumber);
         document.getElementById("finishOrderBtn").addEventListener("click", finishOrder);
+
+        document.getElementById("searchInput")?.addEventListener("input", filterProducts);
+        document.getElementById("sortSelect")?.addEventListener("change", filterProducts);
+        document.querySelectorAll('input[name="paymentMethod"]').forEach(r => {
+            r.addEventListener("change", function() {
+                document.querySelectorAll('input[name="paymentMethod"]').forEach(rb => {
+                    rb.closest("label").style.border = "2px solid var(--border)";
+                    rb.closest("label").style.background = "transparent";
+                    rb.closest("label").style.color = "var(--text)";
+                });
+                this.closest("label").style.border = "2px solid var(--primary)";
+                this.closest("label").style.background = "var(--primary)";
+                this.closest("label").style.color = "white";
+            });
+        });
+        document.getElementById("adminOrdersList")?.addEventListener("change", e => {
+            const select = e.target.closest(".status-select");
+            if (!select) return;
+            const container = select.closest(".admin-order-status");
+            const id = container?.dataset.orderId;
+            if (id) updateOrderStatus(id, select.value);
+        });
 
         document.addEventListener("click", e => {
             const card = e.target.closest(".product-card");
