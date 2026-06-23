@@ -383,6 +383,33 @@
         .admin-order-filters select, .admin-order-filters button { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 0.8rem; background: white; font-weight: 600; cursor: pointer; }
         .admin-order-filters button { background: var(--primary); color: white; border-color: var(--primary); }
 
+        .auth-modal { max-width: 420px; }
+        .auth-modal .modal-header { justify-content: center; position: relative; }
+        .auth-modal .modal-header .close-btn { position: absolute; left: 15px; top: 50%; transform: translateY(-50%); width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--border); background: var(--bg); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 0.85rem; }
+        .auth-tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+        .auth-tab { flex: 1; padding: 10px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: var(--transition); color: var(--text-muted); background: none; text-align: center; }
+        .auth-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .auth-form { display: none; }
+        .auth-form.active { display: block; }
+        .auth-form .form-group { margin-bottom: 14px; }
+        .auth-form .form-group label { display: block; font-weight: 700; margin-bottom: 5px; font-size: 0.85rem; }
+        .auth-form .form-group input { width: 100%; padding: 10px 14px; border-radius: var(--radius-md); border: 1px solid var(--border); font-size: 0.95rem; background: var(--bg); }
+        .auth-error { color: var(--danger); font-size: 0.85rem; margin-bottom: 10px; display: none; }
+        .auth-error.show { display: block; }
+        .auth-success { color: var(--success); font-size: 0.85rem; margin-bottom: 10px; display: none; }
+        .auth-success.show { display: block; }
+        .auth-switch { text-align: center; margin-top: 14px; font-size: 0.85rem; color: var(--text-muted); }
+        .auth-switch a { color: var(--primary); font-weight: 700; cursor: pointer; }
+        .auth-profile-btn { background: var(--primary); color: white; border: none; border-radius: 50px; padding: 6px 14px; font-weight: 700; font-size: 0.8rem; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+        .auth-profile-btn:hover { background: var(--primary-dark); }
+
+        .profile-section { padding: 20px; text-align: center; }
+        .profile-avatar { width: 64px; height: 64px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.6rem; font-weight: 800; margin: 0 auto 10px; }
+        .profile-email { font-weight: 700; margin-bottom: 4px; }
+        .profile-phone { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 15px; }
+        .profile-orders { text-align: right; margin-top: 15px; }
+        .profile-order-item { background: var(--bg); border-radius: var(--radius-md); padding: 12px; margin-bottom: 8px; border: 1px solid var(--border); }
+
         .scroll-top-btn {
             position: fixed; bottom: 25px; right: 25px; width: 42px; height: 42px;
             border-radius: 50%; background: var(--primary); color: white;
@@ -440,6 +467,7 @@
             <a href="#toques">توك</a>
         </nav>
         <div class="header-actions">
+            <button class="auth-profile-btn" id="authBtn">👤 دخول</button>
             <button class="icon-btn" id="favBtn" title="المفضلة">♥<span class="cart-badge hidden" id="favBadge">0</span></button>
             <button class="icon-btn" id="cartBtn" title="السلة">🛒<span class="cart-badge hidden" id="cartBadge">0</span></button>
         </div>
@@ -651,6 +679,46 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="authModal">
+    <div class="modal-content auth-modal">
+        <div class="modal-header">
+            <button class="close-btn" id="closeAuthBtn">✕</button>
+            <h3 id="authModalTitle">👤 تسجيل الدخول</h3>
+        </div>
+        <div style="padding:20px">
+            <div class="auth-tabs">
+                <button class="auth-tab active" data-auth-tab="loginTab">تسجيل الدخول</button>
+                <button class="auth-tab" data-auth-tab="signupTab">إنشاء حساب</button>
+            </div>
+            <div class="auth-error" id="authError"></div>
+            <div class="auth-success" id="authSuccess"></div>
+            <form id="loginForm" class="auth-form active" onsubmit="return false;">
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="loginEmail" placeholder="email@example.com" required></div>
+                <div class="form-group"><label>كلمة المرور</label><input type="password" id="loginPassword" placeholder="●●●●●●●●" required></div>
+                <button class="btn btn-primary btn-block" id="loginBtn" type="button">🔑 دخول</button>
+                <div class="auth-switch"><a id="resetPasswordLink">نسيت كلمة المرور؟</a></div>
+            </form>
+            <form id="signupForm" class="auth-form" onsubmit="return false;">
+                <div class="form-group"><label>الاسم</label><input type="text" id="signupName" placeholder="الاسم كامل" required></div>
+                <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="signupEmail" placeholder="email@example.com" required></div>
+                <div class="form-group"><label>رقم الهاتف</label><input type="tel" id="signupPhone" placeholder="01XXXXXXXXX" pattern="01[0-9]{9}"></div>
+                <div class="form-group"><label>كلمة المرور</label><input type="password" id="signupPassword" placeholder="٦ أحرف على الأقل" minlength="6" required></div>
+                <button class="btn btn-primary btn-block" id="signupBtn" type="button">📝 إنشاء حساب</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="modal-overlay" id="profileModal">
+    <div class="modal-content" style="max-width:500px">
+        <div class="modal-header">
+            <h3>👤 الملف الشخصي</h3>
+            <button class="icon-btn" id="closeProfileBtn" style="border:none">✕</button>
+        </div>
+        <div class="profile-section" id="profileContent"></div>
+    </div>
+</div>
+
 <div class="modal-overlay" id="trackerModal">
     <div class="modal-content" style="max-width:500px">
         <div class="modal-header">
@@ -678,6 +746,7 @@
             <button class="btn btn-primary" id="adminLoginBtn" style="flex:1">دخول</button>
             <button class="btn btn-outline" id="cancelAdminLoginBtn">إلغاء</button>
         </div>
+        <div style="margin-top:14px;font-size:0.75rem;color:var(--text-muted)">💡 سجل دخول بحساب admin@smartchef.com لتخطي كلمة المرور</div>
     </div>
 </div>
 
@@ -801,6 +870,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const FIREBASE_CONFIG = {
         apiKey: "AIzaSyBBrfjdU-sJ8dDisQqMdpDuVQsQ27L1zKg",
@@ -812,6 +882,7 @@
     };
     const app = initializeApp(FIREBASE_CONFIG);
     const db = getFirestore(app);
+    const auth = getAuth(app);
     const productsCollection = collection(db, "chef_products");
     const ordersCollection = collection(db, "chef_orders");
 
@@ -1257,6 +1328,112 @@
         }).catch(e => showToast("فشل تغيير الحالة", "error"));
     }
 
+    let currentUser = null;
+    onAuthStateChanged(auth, user => {
+        currentUser = user;
+        const btn = document.getElementById("authBtn");
+        if (user) {
+            btn.innerHTML = `👤 ${user.displayName || user.email.split('@')[0]}`;
+            btn.title = "الملف الشخصي";
+        } else {
+            btn.innerHTML = "👤 دخول";
+            btn.title = "تسجيل الدخول";
+        }
+    });
+
+    function showAuthForm(tab) {
+        document.querySelectorAll(".auth-tab").forEach(t => t.classList.toggle("active", t.dataset.authTab === tab));
+        document.getElementById("loginForm").classList.toggle("active", tab === "loginTab");
+        document.getElementById("signupForm").classList.toggle("active", tab === "signupTab");
+        document.getElementById("authError").classList.remove("show");
+        document.getElementById("authSuccess").classList.remove("show");
+    }
+
+    async function handleLogin() {
+        const email = document.getElementById("loginEmail").value.trim();
+        const pass = document.getElementById("loginPassword").value;
+        const err = document.getElementById("authError");
+        if (!email || !pass) { err.textContent = "⚠️ البريد الإلكتروني وكلمة المرور مطلوبان"; err.classList.add("show"); return; }
+        try {
+            await signInWithEmailAndPassword(auth, email, pass);
+            document.getElementById("authModal").classList.remove("active");
+            showToast("✅ تم تسجيل الدخول");
+        } catch (e) {
+            err.textContent = e.code === "auth/user-not-found" || e.code === "auth/wrong-password" || e.code === "auth/invalid-credential"
+                ? "❌ البريد أو كلمة المرور غير صحيحة" : "❌ " + e.message;
+            err.classList.add("show");
+        }
+    }
+
+    async function handleSignup() {
+        const name = document.getElementById("signupName").value.trim();
+        const email = document.getElementById("signupEmail").value.trim();
+        const phone = document.getElementById("signupPhone").value.trim();
+        const pass = document.getElementById("signupPassword").value;
+        const err = document.getElementById("authError");
+        if (!name || !email || !pass) { err.textContent = "⚠️ الاسم والبريد وكلمة المرور مطلوبة"; err.classList.add("show"); return; }
+        if (pass.length < 6) { err.textContent = "⚠️ كلمة المرور ٦ أحرف على الأقل"; err.classList.add("show"); return; }
+        try {
+            const cred = await createUserWithEmailAndPassword(auth, email, pass);
+            await updateProfile(cred.user, { displayName: name });
+            if (phone) await updateDoc(doc(db, "chef_orders", "users", cred.user.uid), { phone, name, email });
+            document.getElementById("authModal").classList.remove("active");
+            showToast(`✅ مرحباً ${name}! تم إنشاء الحساب`);
+        } catch (e) {
+            err.textContent = e.code === "auth/email-already-in-use" ? "❌ البريد مستخدم بالفعل" : "❌ " + e.message;
+            err.classList.add("show");
+        }
+    }
+
+    async function handleResetPassword() {
+        const email = document.getElementById("loginEmail").value.trim();
+        const err = document.getElementById("authError");
+        const success = document.getElementById("authSuccess");
+        if (!email) { err.textContent = "⚠️ أدخل البريد الإلكتروني أولاً"; err.classList.add("show"); return; }
+        try {
+            await sendPasswordResetEmail(auth, email);
+            success.textContent = "📧 تم إرسال رابط إعادة تعيين كلمة المرور إلى بريدك";
+            success.classList.add("show");
+            err.classList.remove("show");
+        } catch (e) {
+            err.textContent = "❌ " + e.message;
+            err.classList.add("show");
+        }
+    }
+
+    function openProfile() {
+        if (!currentUser) { document.getElementById("authModal").classList.add("active"); return; }
+        const container = document.getElementById("profileContent");
+        const userOrders = orders.filter(o => o.email === currentUser.email);
+        const statusMap = { "جديد": "new", "مؤكد": "confirmed", "قيد التجهيز": "processing", "تم الشحن": "shipped", "تم التوصيل": "delivered", "ملغي": "cancelled" };
+        container.innerHTML = `
+            <div class="profile-avatar">${(currentUser.displayName || currentUser.email)[0].toUpperCase()}</div>
+            <div class="profile-email">${currentUser.displayName || ""}</div>
+            <div class="profile-phone">${currentUser.email}</div>
+            <button class="btn btn-outline btn-sm" id="profileLogoutBtn" style="margin-bottom:15px">🚪 تسجيل الخروج</button>
+            <div class="profile-orders">
+                <h4 style="margin-bottom:10px">📋 طلباتي (${userOrders.length})</h4>
+                ${userOrders.length ? userOrders.slice().reverse().map(o => `
+                    <div class="profile-order-item">
+                        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+                            <strong>${o.code || "—"}</strong>
+                            <span class="order-status status-${statusMap[o.status] || 'new'}">${o.status || "جديد"}</span>
+                        </div>
+                        <div style="font-size:0.8rem;color:var(--text-muted)">${o.date ? new Date(o.date).toLocaleDateString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric' }) : "—"}</div>
+                        <div style="font-size:0.85rem">${(o.items || []).map(i => `${i.name} × ${i.qty}`).join("، ")}</div>
+                        <div style="font-weight:700;color:var(--primary);margin-top:4px">💰 ${formatPrice(o.total)}</div>
+                    </div>
+                `).join("") : '<p style="color:var(--text-muted);font-size:0.9rem">لا توجد طلبات بعد</p>'}
+            </div>
+        `;
+        document.getElementById("profileModal").classList.add("active");
+        document.getElementById("profileLogoutBtn")?.addEventListener("click", async () => {
+            await signOut(auth);
+            document.getElementById("profileModal").classList.remove("active");
+            showToast("👋 تم تسجيل الخروج");
+        });
+    }
+
     function previewAdminImage(input) {
         const preview = document.getElementById("adminImagePreview");
         if (input.files && input.files[0]) {
@@ -1347,6 +1524,9 @@
 
     function openAdminLogin() {
         if (sessionStorage.getItem("chef_admin") === "1") { openAdminPanel(); return; }
+        if (currentUser && currentUser.email === "admin@smartchef.com") {
+            sessionStorage.setItem("chef_admin", "1"); openAdminPanel(); return;
+        }
         document.getElementById("adminPassword").value = "";
         document.getElementById("adminLoginError").classList.remove("show");
         document.getElementById("adminLoginOverlay").classList.add("active");
@@ -1546,6 +1726,18 @@
 
         document.getElementById("trackOrderLink")?.addEventListener("click", e => { e.preventDefault(); document.getElementById("trackerModal").classList.add("active"); });
         document.getElementById("contactFooter")?.addEventListener("click", e => { e.preventDefault(); window.open("https://wa.me/201212738655", "_blank"); });
+
+        document.getElementById("authBtn")?.addEventListener("click", () => { if (currentUser) openProfile(); else document.getElementById("authModal").classList.add("active"); });
+        document.getElementById("closeAuthBtn")?.addEventListener("click", () => document.getElementById("authModal").classList.remove("active"));
+        document.getElementById("authModal")?.addEventListener("click", e => { if (e.target === e.currentTarget) document.getElementById("authModal").classList.remove("active"); });
+        document.getElementById("closeProfileBtn")?.addEventListener("click", () => document.getElementById("profileModal").classList.remove("active"));
+        document.getElementById("profileModal")?.addEventListener("click", e => { if (e.target === e.currentTarget) document.getElementById("profileModal").classList.remove("active"); });
+        document.querySelectorAll(".auth-tab").forEach(tab => tab.addEventListener("click", () => showAuthForm(tab.dataset.authTab)));
+        document.getElementById("loginBtn")?.addEventListener("click", handleLogin);
+        document.getElementById("signupBtn")?.addEventListener("click", handleSignup);
+        document.getElementById("resetPasswordLink")?.addEventListener("click", handleResetPassword);
+        ["loginEmail", "loginPassword"].forEach(id => document.getElementById(id)?.addEventListener("keydown", e => { if (e.key === "Enter") handleLogin(); }));
+        ["signupName", "signupEmail", "signupPhone", "signupPassword"].forEach(id => document.getElementById(id)?.addEventListener("keydown", e => { if (e.key === "Enter") handleSignup(); }));
 
         let lastScroll = 0;
         window.addEventListener("scroll", () => {
