@@ -371,6 +371,18 @@
 
         .share-whatsapp { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 50px; background: #25d366; color: white; font-weight: 600; font-size: 0.8rem; cursor: pointer; border: none; }
 
+        .site-header.hidden { transform: translateY(-100%); }
+
+        .free-shipping-bar { background: #e8f5e9; border-radius: 50px; padding: 8px 14px; margin-bottom: 12px; text-align: center; font-size: 0.8rem; font-weight: 600; }
+        .free-shipping-bar .progress-track { height: 4px; background: #c8e6c9; border-radius: 4px; margin-top: 8px; overflow: hidden; }
+        .free-shipping-bar .progress-fill { height: 100%; background: #2e7d32; border-radius: 4px; transition: width 0.4s ease; }
+        .free-shipping-bar.done { background: #c8e6c9; }
+        .free-shipping-bar.done .progress-fill { background: #1b5e20; }
+
+        .admin-order-filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+        .admin-order-filters select, .admin-order-filters button { padding: 6px 12px; border-radius: 20px; border: 1px solid var(--border); font-size: 0.8rem; background: white; font-weight: 600; cursor: pointer; }
+        .admin-order-filters button { background: var(--primary); color: white; border-color: var(--primary); }
+
         .scroll-top-btn {
             position: fixed; bottom: 25px; right: 25px; width: 42px; height: 42px;
             border-radius: 50%; background: var(--primary); color: white;
@@ -513,6 +525,10 @@
     </div>
     <div class="drawer-items" id="cartItems"><p style="text-align:center;color:var(--text-muted);padding:40px">السلة فارغة</p></div>
     <div class="drawer-footer">
+        <div class="free-shipping-bar" id="freeShippingBar" style="display:none">
+            <span id="freeShippingText">أضف <strong>500 ج.م</strong> للتوصيل المجاني</span>
+            <div class="progress-track"><div class="progress-fill" id="freeShippingFill" style="width:0%"></div></div>
+        </div>
         <div style="display:flex;justify-content:space-between;font-weight:800;font-size:1.1rem;margin-bottom:12px">
             <span>الإجمالي</span><span id="cartTotal" style="color:var(--primary)">0 ج.م</span>
         </div>
@@ -563,23 +579,23 @@
                     <label>المحافظة *</label>
                     <select id="checkoutGovernorate" required style="width:100%;padding:10px 14px;border-radius:var(--radius-md);border:1px solid var(--border);font-size:0.95rem;background:var(--bg)">
                         <option value="">اختر المحافظة</option>
-                        <option value="20">القاهرة — 20 ج.م</option>
-                        <option value="25">الجيزة — 25 ج.م</option>
-                        <option value="30">الإسكندرية — 30 ج.م</option>
-                        <option value="35">الدقهلية — 35 ج.م</option>
-                        <option value="35">الشرقية — 35 ج.م</option>
-                        <option value="35">القليوبية — 35 ج.م</option>
-                        <option value="40">الغربية — 40 ج.م</option>
-                        <option value="40">المنوفية — 40 ج.م</option>
-                        <option value="40">كفر الشيخ — 40 ج.م</option>
-                        <option value="40">البحيرة — 40 ج.م</option>
-                        <option value="45">المنيا — 45 ج.م</option>
-                        <option value="45">أسيوط — 45 ج.م</option>
-                        <option value="45">سوهاج — 45 ج.م</option>
-                        <option value="50">قنا — 50 ج.م</option>
-                        <option value="50">الأقصر — 50 ج.م</option>
-                        <option value="50">أسوان — 50 ج.م</option>
-                        <option value="55">البحر الأحمر — 55 ج.م</option>
+                        <option value="20" data-days="1-2">القاهرة — 20 ج.م (1-2 يوم)</option>
+                        <option value="25" data-days="1-2">الجيزة — 25 ج.م (1-2 يوم)</option>
+                        <option value="30" data-days="2-3">الإسكندرية — 30 ج.م (2-3 أيام)</option>
+                        <option value="35" data-days="2-3">الدقهلية — 35 ج.م (2-3 أيام)</option>
+                        <option value="35" data-days="2-3">الشرقية — 35 ج.م (2-3 أيام)</option>
+                        <option value="35" data-days="2-3">القليوبية — 35 ج.م (2-3 أيام)</option>
+                        <option value="40" data-days="2-4">الغربية — 40 ج.م (2-4 أيام)</option>
+                        <option value="40" data-days="2-4">المنوفية — 40 ج.م (2-4 أيام)</option>
+                        <option value="40" data-days="2-4">كفر الشيخ — 40 ج.م (2-4 أيام)</option>
+                        <option value="40" data-days="2-4">البحيرة — 40 ج.م (2-4 أيام)</option>
+                        <option value="45" data-days="3-5">المنيا — 45 ج.م (3-5 أيام)</option>
+                        <option value="45" data-days="3-5">أسيوط — 45 ج.م (3-5 أيام)</option>
+                        <option value="45" data-days="3-5">سوهاج — 45 ج.م (3-5 أيام)</option>
+                        <option value="50" data-days="4-6">قنا — 50 ج.م (4-6 أيام)</option>
+                        <option value="50" data-days="4-6">الأقصر — 50 ج.م (4-6 أيام)</option>
+                        <option value="50" data-days="4-6">أسوان — 50 ج.م (4-6 أيام)</option>
+                        <option value="55" data-days="4-7">البحر الأحمر — 55 ج.م (4-7 أيام)</option>
                         <option value="55">مطروح — 55 ج.م</option>
                         <option value="60">شمال سيناء — 60 ج.م</option>
                         <option value="60">جنوب سيناء — 60 ج.م</option>
@@ -765,6 +781,10 @@
         </div>
         <div id="adminOrdersTab" class="admin-tab-content hidden">
             <div class="admin-subtitle">جميع الطلبات</div>
+            <div class="admin-order-filters">
+                <select id="adminOrderStatusFilter"><option value="">كل الحالات</option><option value="جديد">جديد</option><option value="مؤكد">مؤكد</option><option value="قيد التجهيز">قيد التجهيز</option><option value="تم الشحن">تم الشحن</option><option value="تم التوصيل">تم التوصيل</option><option value="ملغي">ملغي</option></select>
+                <button id="exportCsvBtn">📥 تصدير CSV</button>
+            </div>
             <div id="adminOrdersList"><p class="admin-empty">لا توجد طلبات بعد</p></div>
         </div>
     </div>
@@ -851,7 +871,7 @@
                     { name: "🏠 العنوان", value: orderData.address, inline: false },
                     { name: "📝 ملاحظات", value: orderData.notes || "—", inline: false },
                     { name: "💰 الإجمالي", value: formatPrice(orderData.total), inline: true },
-                    { name: "🚚 التوصيل", value: formatPrice(orderData.deliveryFee || 0), inline: true },
+                    { name: "🚚 التوصيل", value: formatPrice(orderData.deliveryFee || 0) + (orderData.deliveryDays ? ' (' + orderData.deliveryDays + ')' : ''), inline: true },
                     { name: "💳 طريقة الدفع", value: orderData.paymentMethod === "cod" ? "الدفع عند الاستلام" : "فودافون كاش", inline: true }
                 ],
                 description: orderData.items.map(i => `• ${i.name} × ${i.qty} = ${formatPrice(i.price * i.qty)}`).join("\n"),
@@ -994,6 +1014,20 @@
         }
         const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
         document.getElementById("cartTotal").textContent = formatPrice(total);
+        const FREE_SHIPPING_THRESHOLD = 500;
+        const bar = document.getElementById("freeShippingBar");
+        const fill = document.getElementById("freeShippingFill");
+        const text = document.getElementById("freeShippingText");
+        if (total >= FREE_SHIPPING_THRESHOLD) {
+            bar.style.display = "block"; bar.classList.add("done");
+            text.innerHTML = "🎉 توصيل مجاني ✅";
+            fill.style.width = "100%";
+        } else if (total > 0) {
+            bar.style.display = "block"; bar.classList.remove("done");
+            const pct = Math.min((total / FREE_SHIPPING_THRESHOLD) * 100, 99);
+            fill.style.width = pct + "%";
+            text.innerHTML = `أضف <strong>${formatPrice(FREE_SHIPPING_THRESHOLD - total)}</strong> للتوصيل المجاني`;
+        } else { bar.style.display = "none"; }
         updateBadges();
     }
 
@@ -1120,6 +1154,11 @@
         const sel = document.getElementById("checkoutGovernorate");
         return sel.options[sel.selectedIndex]?.text?.split(" — ")[0] || "";
     }
+    function getDeliveryDays() {
+        const sel = document.getElementById("checkoutGovernorate");
+        const opt = sel.options[sel.selectedIndex];
+        return opt?.dataset?.days || "";
+    }
 
     async function submitCheckoutForm(e) {
         e.preventDefault();
@@ -1133,6 +1172,7 @@
         const total = subtotal + deliveryFee;
         const code = generateOrderCode();
         const paymentMethod = document.querySelector('input[name="paymentMethod"]:checked')?.value || "vodafone";
+        const deliveryDays = getDeliveryDays();
         const orderData = {
             code,
             phone,
@@ -1145,6 +1185,7 @@
             total,
             paymentMethod,
             status: "جديد",
+            deliveryDays,
             items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
             date: new Date().toISOString()
         };
@@ -1161,7 +1202,7 @@
         const paymentMsg = isCOD
             ? `\n💵 الدفع عند الاستلام`
             : `\n💳 حول على فودافون كاش: ${VODAFONE_CASH}\n📲 أرسل صورة التحويل لتأكيد الطلب.`;
-        const msg = `طلب جديد Smart Chef Uniform\n\n📋 كود: ${code}\n📱 ${phone}\n📍 ${govName} - ${orderData.address}${orderData.notes ? '\n📝 ' + orderData.notes : ''}\n\n${itemsText}\n\n🚚 التوصيل: ${formatPrice(deliveryFee)}\n💰 الإجمالي (شامل التوصيل): ${formatPrice(total)}${paymentMsg}`;
+        const msg = `طلب جديد Smart Chef Uniform\n\n📋 كود: ${code}\n📱 ${phone}\n📍 ${govName} - ${orderData.address}${orderData.notes ? '\n📝 ' + orderData.notes : ''}\n\n${itemsText}\n\n🚚 التوصيل: ${formatPrice(deliveryFee)}${deliveryDays ? ' (' + deliveryDays + ')' : ''}\n💰 الإجمالي (شامل التوصيل): ${formatPrice(total)}${paymentMsg}`;
 
         document.getElementById("whatsappConfirmBtn").href = `https://wa.me/${WHATSAPP_OWNER}?text=${encodeURIComponent(msg)}`;
 
@@ -1382,9 +1423,10 @@
     function renderAdminOrders() {
         const container = document.getElementById("adminOrdersList");
         if (!container) return;
-        if (!orders.length) { container.innerHTML = '<p class="admin-empty">لا توجد طلبات بعد</p>'; return; }
+        const filtered = getFilteredOrders();
+        if (!filtered.length) { container.innerHTML = '<p class="admin-empty">لا توجد طلبات بعد</p>'; return; }
         const statusMap = { "جديد": "new", "مؤكد": "confirmed", "قيد التجهيز": "processing", "تم الشحن": "shipped", "تم التوصيل": "delivered", "ملغي": "cancelled" };
-        container.innerHTML = orders.slice().reverse().map(o => {
+        container.innerHTML = filtered.slice().reverse().map(o => {
             const items = (o.items || []).map(i => `${i.name} × ${i.qty}`).join("، ");
             const statusClass = statusMap[o.status] || "new";
             return `
@@ -1415,6 +1457,34 @@
                 </div>
             `;
         }).join("");
+    }
+
+    function getFilteredOrders() {
+        const filter = document.getElementById("adminOrderStatusFilter")?.value || "";
+        return filter ? orders.filter(o => o.status === filter) : orders;
+    }
+
+    function exportOrdersCsv() {
+        const list = getFilteredOrders();
+        if (!list.length) { showToast("لا توجد طلبات للتصدير", "info"); return; }
+        const rows = [["كود", "الهاتف", "البريد", "المحافظة", "العنوان", "طريقة الدفع", "الحالة", "الإجمالي", "التوصيل", "التاريخ", "المنتجات", "ملاحظات"]];
+        list.forEach(o => {
+            const items = (o.items || []).map(i => `${i.name} ${i.qty}x ${i.price}`).join("; ");
+            rows.push([
+                o.code || "", o.phone || "", o.email || "", o.governorate || "", o.address || "",
+                o.paymentMethod === "cod" ? "الدفع عند الاستلام" : "فودافون كاش", o.status || "جديد",
+                o.total || 0, o.deliveryFee || 0,
+                o.date ? new Date(o.date).toLocaleString("en-US") : "",
+                items, o.notes || ""
+            ]);
+        });
+        const csv = rows.map(r => r.map(c => `"${String(c).replace(/"/g, '""')}"`).join(",")).join("\n");
+        const bom = "\uFEFF";
+        const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a"); a.href = url; a.download = "orders.csv"; a.click();
+        URL.revokeObjectURL(url);
+        showToast("✅ تم التصدير");
     }
 
     function searchOrders() {
@@ -1476,6 +1546,16 @@
 
         document.getElementById("trackOrderLink")?.addEventListener("click", e => { e.preventDefault(); document.getElementById("trackerModal").classList.add("active"); });
         document.getElementById("contactFooter")?.addEventListener("click", e => { e.preventDefault(); window.open("https://wa.me/201212738655", "_blank"); });
+
+        let lastScroll = 0;
+        window.addEventListener("scroll", () => {
+            const header = document.querySelector(".site-header");
+            if (!header) return;
+            const cur = window.scrollY;
+            if (cur > 120 && cur > lastScroll) header.classList.add("hidden");
+            else header.classList.remove("hidden");
+            lastScroll = cur;
+        }, { passive: true });
         document.getElementById("closeTrackerBtn")?.addEventListener("click", () => document.getElementById("trackerModal").classList.remove("active"));
         document.getElementById("trackerSearchBtn")?.addEventListener("click", searchOrders);
         document.getElementById("trackerPhone")?.addEventListener("keydown", e => { if (e.key === "Enter") searchOrders(); });
@@ -1500,6 +1580,10 @@
             const container = select.closest(".admin-order-status");
             const id = container?.dataset.orderId;
             if (id) updateOrderStatus(id, select.value);
+        });
+        document.getElementById("exportCsvBtn")?.addEventListener("click", exportOrdersCsv);
+        document.getElementById("adminOrderStatusFilter")?.addEventListener("change", () => {
+            renderAdminOrders();
         });
 
         document.addEventListener("click", e => {
