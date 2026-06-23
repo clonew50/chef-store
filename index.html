@@ -298,6 +298,21 @@
         .btn-admin-sm { padding: 6px 10px; border-radius: var(--radius-sm); font-weight: 700; font-size: 0.75rem; transition: var(--transition); }
         .btn-admin-edit { background: #e8f4fd; color: #3498db; }
         .btn-admin-delete { background: #fde8e8; color: #e74c3c; }
+        .admin-tabs { display: flex; gap: 0; margin-bottom: 20px; border-bottom: 2px solid var(--border); }
+        .admin-tab { padding: 10px 20px; font-weight: 700; font-size: 0.9rem; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -2px; transition: var(--transition); color: var(--text-muted); background: none; }
+        .admin-tab:hover { color: var(--text); }
+        .admin-tab.active { color: var(--primary); border-bottom-color: var(--primary); }
+        .admin-tab-content { display: block; }
+        .admin-tab-content.hidden { display: none; }
+        .admin-order-item { background: var(--bg); border-radius: var(--radius-md); padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); }
+        .admin-order-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; flex-wrap: wrap; gap: 6px; }
+        .admin-order-code { font-weight: 800; color: var(--primary); }
+        .admin-order-date { font-size: 0.8rem; color: var(--text-muted); }
+        .admin-order-info { font-size: 0.85rem; margin-bottom: 6px; }
+        .admin-order-info span { font-weight: 700; }
+        .admin-order-items { font-size: 0.8rem; color: var(--text-muted); margin-bottom: 6px; }
+        .admin-order-total { font-weight: 800; color: var(--primary); }
+        .admin-empty { text-align: center; color: var(--text-muted); padding: 30px; }
 
         .scroll-top-btn {
             position: fixed; bottom: 25px; right: 25px; width: 42px; height: 42px;
@@ -472,8 +487,35 @@
                     <input type="email" id="checkoutEmail" placeholder="example@email.com">
                 </div>
                 <div class="form-group">
-                    <label>عنوان التوصيل *</label>
-                    <input type="text" id="checkoutAddress" placeholder="المحافظة، المدينة، العنوان بالتفصيل" required>
+                    <label>المحافظة *</label>
+                    <select id="checkoutGovernorate" required style="width:100%;padding:10px 14px;border-radius:var(--radius-md);border:1px solid var(--border);font-size:0.95rem;background:var(--bg)">
+                        <option value="">اختر المحافظة</option>
+                        <option value="20">القاهرة — 20 ج.م</option>
+                        <option value="25">الجيزة — 25 ج.م</option>
+                        <option value="30">الإسكندرية — 30 ج.م</option>
+                        <option value="35">الدقهلية — 35 ج.م</option>
+                        <option value="35">الشرقية — 35 ج.م</option>
+                        <option value="35">القليوبية — 35 ج.م</option>
+                        <option value="40">الغربية — 40 ج.م</option>
+                        <option value="40">المنوفية — 40 ج.م</option>
+                        <option value="40">كفر الشيخ — 40 ج.م</option>
+                        <option value="40">البحيرة — 40 ج.م</option>
+                        <option value="45">المنيا — 45 ج.م</option>
+                        <option value="45">أسيوط — 45 ج.م</option>
+                        <option value="45">سوهاج — 45 ج.م</option>
+                        <option value="50">قنا — 50 ج.م</option>
+                        <option value="50">الأقصر — 50 ج.م</option>
+                        <option value="50">أسوان — 50 ج.م</option>
+                        <option value="55">البحر الأحمر — 55 ج.م</option>
+                        <option value="55">مطروح — 55 ج.م</option>
+                        <option value="60">شمال سيناء — 60 ج.م</option>
+                        <option value="60">جنوب سيناء — 60 ج.م</option>
+                        <option value="60">الوادي الجديد — 60 ج.م</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>العنوان بالتفصيل *</label>
+                    <input type="text" id="checkoutAddress" placeholder="الشارع، العمارة، الدور، الشقة" required>
                 </div>
                 <div class="form-group">
                     <label>ملاحظات (اختياري)</label>
@@ -522,87 +564,95 @@
 <div class="admin-overlay" id="adminPanelOverlay">
     <div class="admin-box">
         <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
-            <div>
-                <div class="admin-title">⚙️ إدارة المنتجات</div>
-                <div class="admin-subtitle">إجمالي المنتجات: <span id="adminProductCount">0</span></div>
-            </div>
+            <div class="admin-title">⚙️ لوحة التحكم</div>
             <button class="btn-admin-sm btn-admin-edit" id="adminLogoutBtn" style="padding:8px 16px">🚪 خروج</button>
         </div>
-        <form id="adminProductForm">
-            <input type="hidden" id="adminEditId">
-            <div class="admin-form-row">
-                <div class="admin-form-group">
-                    <label>اسم المنتج *</label>
-                    <input type="text" id="adminName" required>
+        <div class="admin-tabs">
+            <button class="admin-tab active" data-tab="adminProductsTab">📦 المنتجات</button>
+            <button class="admin-tab" data-tab="adminOrdersTab">📋 الطلبات</button>
+        </div>
+        <div id="adminProductsTab" class="admin-tab-content">
+            <div class="admin-subtitle">إجمالي المنتجات: <span id="adminProductCount">0</span></div>
+            <form id="adminProductForm">
+                <input type="hidden" id="adminEditId">
+                <div class="admin-form-row">
+                    <div class="admin-form-group">
+                        <label>اسم المنتج *</label>
+                        <input type="text" id="adminName" required>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>الماركة</label>
+                        <input type="text" id="adminBrand" placeholder="Smart Chef">
+                    </div>
+                </div>
+                <div class="admin-form-row">
+                    <div class="admin-form-group">
+                        <label>القسم *</label>
+                        <select id="adminCategory" required>
+                            <option value="jackets">جاكيتات</option>
+                            <option value="aprons">مرايل</option>
+                            <option value="caps">كابات</option>
+                            <option value="pants">بناطيل</option>
+                            <option value="soap">صابون</option>
+                            <option value="toques">توك</option>
+                        </select>
+                    </div>
+                    <div class="admin-form-group">
+                        <label>الوسم</label>
+                        <select id="adminBadge">
+                            <option value="">بدون</option>
+                            <option value="new">جديد</option>
+                            <option value="sale">خصم</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="admin-form-row">
+                    <div class="admin-form-group">
+                        <label>السعر *</label>
+                        <input type="number" id="adminPrice" required min="1">
+                    </div>
+                    <div class="admin-form-group">
+                        <label>السعر القديم (اختياري)</label>
+                        <input type="number" id="adminOldPrice" min="0">
+                    </div>
                 </div>
                 <div class="admin-form-group">
-                    <label>الماركة</label>
-                    <input type="text" id="adminBrand" placeholder="Smart Chef">
-                </div>
-            </div>
-            <div class="admin-form-row">
-                <div class="admin-form-group">
-                    <label>القسم *</label>
-                    <select id="adminCategory" required>
-                        <option value="jackets">جاكيتات</option>
-                        <option value="aprons">مرايل</option>
-                        <option value="caps">كابات</option>
-                        <option value="pants">بناطيل</option>
-                        <option value="soap">صابون</option>
-                        <option value="toques">توك</option>
-                    </select>
+                    <label>المواصفات (مفصولة بفاصلة)</label>
+                    <input type="text" id="adminSpecs" placeholder="قطن 100%, XL-XXL">
                 </div>
                 <div class="admin-form-group">
-                    <label>الوسم</label>
-                    <select id="adminBadge">
-                        <option value="">بدون</option>
-                        <option value="new">جديد</option>
-                        <option value="sale">خصم</option>
-                    </select>
-                </div>
-            </div>
-            <div class="admin-form-row">
-                <div class="admin-form-group">
-                    <label>السعر *</label>
-                    <input type="number" id="adminPrice" required min="1">
+                    <label>الوصف</label>
+                    <textarea id="adminDescription" placeholder="وصف المنتج"></textarea>
                 </div>
                 <div class="admin-form-group">
-                    <label>السعر القديم (اختياري)</label>
-                    <input type="number" id="adminOldPrice" min="0">
+                    <label>التفاصيل (سطر لكل تفصيلة: label: value)</label>
+                    <textarea id="adminDetails" placeholder="الخامة: قطن 100%"></textarea>
                 </div>
+                <div class="admin-form-group">
+                    <label>المميزات (مفصولة بفاصلة)</label>
+                    <input type="text" id="adminFeatures" placeholder="مريح, قابل للغسيل">
+                </div>
+                <div class="admin-form-group">
+                    <label>رابط الصورة</label>
+                    <input type="url" id="adminImagePath" placeholder="https://example.com/image.jpg">
+                </div>
+                <div class="admin-form-group">
+                    <label>أو رفع صورة</label>
+                    <input type="file" id="adminImageFile" accept="image/*">
+                    <img class="admin-image-preview" id="adminImagePreview">
+                </div>
+                <div style="display:flex;gap:10px;margin-top:15px">
+                    <button class="btn btn-primary" type="submit" id="adminSubmitBtn" style="flex:1">حفظ المنتج</button>
+                    <button class="btn btn-outline" type="button" id="resetAdminFormBtn">إعادة تعيين</button>
+                </div>
+            </form>
+            <div class="admin-product-list" id="adminProductsList">
+                <p style="text-align:center;color:var(--text-muted);padding:20px">جار التحميل...</p>
             </div>
-            <div class="admin-form-group">
-                <label>المواصفات (مفصولة بفاصلة)</label>
-                <input type="text" id="adminSpecs" placeholder="قطن 100%, XL-XXL">
-            </div>
-            <div class="admin-form-group">
-                <label>الوصف</label>
-                <textarea id="adminDescription" placeholder="وصف المنتج"></textarea>
-            </div>
-            <div class="admin-form-group">
-                <label>التفاصيل (سطر لكل تفصيلة: label: value)</label>
-                <textarea id="adminDetails" placeholder="الخامة: قطن 100%"></textarea>
-            </div>
-            <div class="admin-form-group">
-                <label>المميزات (مفصولة بفاصلة)</label>
-                <input type="text" id="adminFeatures" placeholder="مريح, قابل للغسيل">
-            </div>
-            <div class="admin-form-group">
-                <label>رابط الصورة</label>
-                <input type="url" id="adminImagePath" placeholder="https://example.com/image.jpg">
-            </div>
-            <div class="admin-form-group">
-                <label>أو رفع صورة</label>
-                <input type="file" id="adminImageFile" accept="image/*">
-                <img class="admin-image-preview" id="adminImagePreview">
-            </div>
-            <div style="display:flex;gap:10px;margin-top:15px">
-                <button class="btn btn-primary" type="submit" id="adminSubmitBtn" style="flex:1">حفظ المنتج</button>
-                <button class="btn btn-outline" type="button" id="resetAdminFormBtn">إعادة تعيين</button>
-            </div>
-        </form>
-        <div class="admin-product-list" id="adminProductsList">
-            <p style="text-align:center;color:var(--text-muted);padding:20px">جار التحميل...</p>
+        </div>
+        <div id="adminOrdersTab" class="admin-tab-content hidden">
+            <div class="admin-subtitle">جميع الطلبات</div>
+            <div id="adminOrdersList"><p class="admin-empty">لا توجد طلبات بعد</p></div>
         </div>
     </div>
 </div>
@@ -679,9 +729,11 @@
                     { name: "📋 كود الطلب", value: orderData.code, inline: true },
                     { name: "📱 الهاتف", value: orderData.phone, inline: true },
                     { name: "📧 البريد", value: orderData.email || "—", inline: true },
-                    { name: "📍 العنوان", value: orderData.address, inline: false },
+                    { name: "📍 المحافظة", value: orderData.governorate || "—", inline: true },
+                    { name: "🏠 العنوان", value: orderData.address, inline: false },
                     { name: "📝 ملاحظات", value: orderData.notes || "—", inline: false },
                     { name: "💰 الإجمالي", value: formatPrice(orderData.total), inline: true },
+                    { name: "🚚 التوصيل", value: formatPrice(orderData.deliveryFee || 0), inline: true },
                     { name: "💳 طريقة الدفع", value: "فودافون كاش", inline: true }
                 ],
                 description: orderData.items.map(i => `• ${i.name} × ${i.qty} = ${formatPrice(i.price * i.qty)}`).join("\n"),
@@ -891,10 +943,10 @@
         document.getElementById("cartDrawer").classList.remove("active");
         document.getElementById("cartOverlay").classList.remove("active");
         showCheckoutStep(1);
-        const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+        const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
         document.getElementById("checkoutSummary").innerHTML = cart.map(i =>
             `<div class="checkout-summary-line"><span>${i.name} × ${i.qty}</span><span>${formatPrice(i.price * i.qty)}</span></div>`
-        ).join("") + `<div class="checkout-summary-line" style="font-weight:800;color:var(--primary);margin-top:6px"><span>الإجمالي</span><span>${formatPrice(total)}</span></div>`;
+        ).join("") + `<div class="checkout-summary-line"><span>🚚 التوصيل</span><span>سيتم حسابه</span></div>`;
         document.getElementById("checkoutOverlay").classList.add("active");
         document.body.style.overflow = "hidden";
     }
@@ -911,18 +963,36 @@
         document.getElementById("checkoutDot2").classList.toggle("active", step >= 2);
     }
 
+    function getDeliveryCost() {
+        const val = document.getElementById("checkoutGovernorate").value;
+        return val ? Number(val) : 0;
+    }
+
+    function getGovernorateName() {
+        const sel = document.getElementById("checkoutGovernorate");
+        return sel.options[sel.selectedIndex]?.text?.split(" — ")[0] || "";
+    }
+
     async function submitCheckoutForm(e) {
         e.preventDefault();
         const phone = document.getElementById("checkoutPhone").value.trim();
         if (!/^01[0-9]{9}$/.test(phone)) { showToast("رقم هاتف غير صحيح", "warning"); return; }
-        const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+        const gov = document.getElementById("checkoutGovernorate").value;
+        if (!gov) { showToast("اختر المحافظة", "warning"); return; }
+        const deliveryFee = Number(gov);
+        const govName = getGovernorateName();
+        const subtotal = cart.reduce((s, i) => s + i.price * i.qty, 0);
+        const total = subtotal + deliveryFee;
         const code = generateOrderCode();
         const orderData = {
             code,
             phone,
             email: document.getElementById("checkoutEmail").value.trim(),
+            governorate: govName,
             address: document.getElementById("checkoutAddress").value.trim(),
             notes: document.getElementById("checkoutNotes").value.trim(),
+            deliveryFee,
+            subtotal,
             total,
             items: cart.map(i => ({ name: i.name, qty: i.qty, price: i.price })),
             date: new Date().toISOString()
@@ -933,7 +1003,7 @@
         document.getElementById("orderCodeDisplay").textContent = code;
 
         const itemsText = cart.map(i => `• ${i.name} × ${i.qty} = ${formatPrice(i.price * i.qty)}`).join("\n");
-        const msg = `طلب جديد Smart Chef Uniform\n\n📋 كود: ${code}\n📱 ${phone}\n📍 ${orderData.address}${orderData.notes ? '\n📝 ' + orderData.notes : ''}\n\n${itemsText}\n\n💰 الإجمالي: ${formatPrice(total)}\n\n💳 حول على فودافون كاش: ${VODAFONE_CASH}\n📲 أرسل صورة التحويل لتأكيد الطلب.`;
+        const msg = `طلب جديد Smart Chef Uniform\n\n📋 كود: ${code}\n📱 ${phone}\n📍 ${govName} - ${orderData.address}${orderData.notes ? '\n📝 ' + orderData.notes : ''}\n\n${itemsText}\n\n🚚 التوصيل: ${formatPrice(deliveryFee)}\n💰 الإجمالي (شامل التوصيل): ${formatPrice(total)}\n\n💳 حول على فودافون كاش: ${VODAFONE_CASH}\n📲 أرسل صورة التحويل لتأكيد الطلب.`;
 
         document.getElementById("whatsappConfirmBtn").href = `https://wa.me/${WHATSAPP_OWNER}?text=${encodeURIComponent(msg)}`;
 
@@ -1104,6 +1174,37 @@
         }
     }
 
+    let orders = [];
+    function listenToOrders() {
+        onSnapshot(collection(db, "chef_orders"), (snap) => {
+            orders = [];
+            snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
+            renderAdminOrders();
+        }, (e) => console.error("Orders error:", e));
+    }
+    function renderAdminOrders() {
+        const container = document.getElementById("adminOrdersList");
+        if (!container) return;
+        if (!orders.length) { container.innerHTML = '<p class="admin-empty">لا توجد طلبات بعد</p>'; return; }
+        container.innerHTML = orders.slice().reverse().map(o => {
+            const items = (o.items || []).map(i => `${i.name} × ${i.qty}`).join("، ");
+            return `
+                <div class="admin-order-item">
+                    <div class="admin-order-header">
+                        <span class="admin-order-code">📋 ${o.code || "—"}</span>
+                        <span class="admin-order-date">${o.date ? new Date(o.date).toLocaleDateString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : "—"}</span>
+                    </div>
+                    <div class="admin-order-info"><span>📱</span> ${o.phone || "—"} ${o.email ? '| <span>📧</span> ' + o.email : ''}</div>
+                    <div class="admin-order-info"><span>📍</span> ${o.governorate || ""} ${o.address || "—"}</div>
+                    ${o.notes ? `<div class="admin-order-info"><span>📝</span> ${o.notes}</div>` : ""}
+                    <div class="admin-order-items">${items}</div>
+                    ${o.deliveryFee ? `<div class="admin-order-info"><span>🚚</span> ${formatPrice(o.deliveryFee)}</div>` : ""}
+                    <div class="admin-order-total">💰 ${formatPrice(o.total)}</div>
+                </div>
+            `;
+        }).join("");
+    }
+
     function bindEvents() {
         document.getElementById("cartBtn").addEventListener("click", () => {
             document.getElementById("cartOverlay").classList.toggle("active");
@@ -1165,6 +1266,15 @@
         document.getElementById("adminPanelOverlay").addEventListener("click", e => { if (e.target === e.currentTarget) closeAdminPanel(); });
         document.getElementById("adminLogoutBtn").addEventListener("click", adminLogout);
         document.getElementById("adminImageFile").addEventListener("change", function() { previewAdminImage(this); });
+        document.querySelectorAll(".admin-tab").forEach(tab => {
+            tab.addEventListener("click", () => {
+                document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
+                document.querySelectorAll(".admin-tab-content").forEach(c => c.classList.add("hidden"));
+                tab.classList.add("active");
+                const target = document.getElementById(tab.dataset.tab);
+                if (target) target.classList.remove("hidden");
+            });
+        });
         document.getElementById("adminProductForm").addEventListener("submit", saveAdminProduct);
         document.getElementById("resetAdminFormBtn").addEventListener("click", resetAdminForm);
         document.body.addEventListener("click", handleGlobalClick);
@@ -1192,6 +1302,7 @@
 
     seedDefaultProducts();
     listenToProducts();
+    listenToOrders();
     updateCartUI();
     updateBadges();
     bindEvents();
