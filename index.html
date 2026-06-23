@@ -696,6 +696,8 @@
                 <div class="form-group"><label>البريد الإلكتروني</label><input type="email" id="loginEmail" placeholder="email@example.com" required></div>
                 <div class="form-group"><label>كلمة المرور</label><input type="password" id="loginPassword" placeholder="●●●●●●●●" required></div>
                 <button class="btn btn-primary btn-block" id="loginBtn" type="button">🔑 دخول</button>
+                <div style="display:flex;align-items:center;gap:10px;margin:14px 0"><hr style="flex:1;border:none;border-top:1px solid var(--border)"><span style="font-size:0.8rem;color:var(--text-muted)">أو</span><hr style="flex:1;border:none;border-top:1px solid var(--border)"></div>
+                <button class="btn btn-block" id="googleLoginBtn" type="button" style="background:white;color:var(--text);border-color:#ddd;display:flex;align-items:center;justify-content:center;gap:8px"> <span style="font-size:1.2rem">⟨</span> تسجيل الدخول عبر Google</button>
                 <div class="auth-switch"><a id="resetPasswordLink">نسيت كلمة المرور؟</a></div>
             </form>
             <form id="signupForm" class="auth-form" onsubmit="return false;">
@@ -870,7 +872,7 @@
 <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getFirestore, collection, addDoc, updateDoc, deleteDoc, doc, getDocs, onSnapshot } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+    import { getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword, signOut, onAuthStateChanged, sendPasswordResetEmail, updateProfile, GoogleAuthProvider, signInWithPopup } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
     const FIREBASE_CONFIG = {
         apiKey: "AIzaSyBBrfjdU-sJ8dDisQqMdpDuVQsQ27L1zKg",
@@ -1365,6 +1367,20 @@
         }
     }
 
+    async function handleGoogleLogin() {
+        const provider = new GoogleAuthProvider();
+        try {
+            await signInWithPopup(auth, provider);
+            document.getElementById("authModal").classList.remove("active");
+            showToast("✅ تم تسجيل الدخول عبر Google");
+        } catch (e) {
+            if (e.code !== "auth/popup-closed-by-user" && e.code !== "auth/cancelled-popup-request") {
+                document.getElementById("authError").textContent = "❌ " + e.message;
+                document.getElementById("authError").classList.add("show");
+            }
+        }
+    }
+
     async function handleSignup() {
         const name = document.getElementById("signupName").value.trim();
         const email = document.getElementById("signupEmail").value.trim();
@@ -1734,6 +1750,7 @@
         document.getElementById("profileModal")?.addEventListener("click", e => { if (e.target === e.currentTarget) document.getElementById("profileModal").classList.remove("active"); });
         document.querySelectorAll(".auth-tab").forEach(tab => tab.addEventListener("click", () => showAuthForm(tab.dataset.authTab)));
         document.getElementById("loginBtn")?.addEventListener("click", handleLogin);
+        document.getElementById("googleLoginBtn")?.addEventListener("click", handleGoogleLogin);
         document.getElementById("signupBtn")?.addEventListener("click", handleSignup);
         document.getElementById("resetPasswordLink")?.addEventListener("click", handleResetPassword);
         ["loginEmail", "loginPassword"].forEach(id => document.getElementById(id)?.addEventListener("keydown", e => { if (e.key === "Enter") handleLogin(); }));
