@@ -327,6 +327,50 @@
         .admin-order-status { margin-top: 8px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
         .admin-order-status select { padding: 4px 8px; border-radius: 12px; border: 1px solid var(--border); font-size: 0.8rem; background: white; }
 
+        .spinner-overlay {
+            position: fixed; inset: 0; background: white; z-index: 9999;
+            display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;
+            opacity: 1; transition: opacity 0.5s ease; pointer-events: none;
+        }
+        .spinner-overlay.done { opacity: 0; }
+        .spinner { width: 40px; height: 40px; border: 4px solid #eee; border-top-color: var(--primary); border-radius: 50%; animation: spin 0.8s linear infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .spinner-text { font-size: 0.95rem; color: var(--text-muted); font-weight: 600; }
+
+        .whatsapp-float {
+            position: fixed; bottom: 70px; left: 20px; width: 52px; height: 52px;
+            border-radius: 50%; background: #25d366; color: white; z-index: 998;
+            display: flex; align-items: center; justify-content: center; font-size: 1.6rem;
+            box-shadow: 0 4px 16px rgba(37,211,102,0.4); transition: var(--transition); text-decoration: none;
+        }
+        .whatsapp-float:hover { transform: scale(1.08); box-shadow: 0 6px 24px rgba(37,211,102,0.5); }
+        .whatsapp-float .tooltip {
+            position: absolute; left: 60px; top: 50%; transform: translateY(-50%);
+            background: var(--bg-dark); color: white; padding: 6px 12px; border-radius: 8px;
+            font-size: 0.75rem; font-weight: 600; white-space: nowrap; opacity: 0;
+            visibility: hidden; transition: var(--transition);
+        }
+        .whatsapp-float:hover .tooltip { opacity: 1; visibility: visible; }
+
+        .track-order-link { text-align: center; margin: 20px 0; }
+        .track-order-link a { color: var(--primary); font-weight: 700; cursor: pointer; text-decoration: underline; font-size: 0.9rem; }
+
+        .tracker-form { text-align: center; padding: 20px; }
+        .tracker-form input { max-width: 320px; width: 100%; padding: 12px 16px; border-radius: 50px; border: 1px solid var(--border); font-size: 1rem; text-align: center; margin-bottom: 12px; }
+        .tracker-orders { margin-top: 15px; }
+        .tracker-order { background: var(--bg); border-radius: var(--radius-md); padding: 12px; margin-bottom: 10px; border: 1px solid var(--border); text-align: right; }
+
+        .admin-dashboard-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 10px; margin-bottom: 20px; }
+        .admin-stat-card { background: var(--bg); border-radius: var(--radius-md); padding: 14px; text-align: center; border: 1px solid var(--border); }
+        .admin-stat-num { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+        .admin-stat-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; }
+
+        .badge-out { background: #666; color: white; }
+        .out-of-stock { opacity: 0.6; }
+        .out-of-stock .btn-add-cart { background: #ccc; cursor: not-allowed; pointer-events: none; }
+
+        .share-whatsapp { display: inline-flex; align-items: center; gap: 6px; padding: 6px 14px; border-radius: 50px; background: #25d366; color: white; font-weight: 600; font-size: 0.8rem; cursor: pointer; border: none; }
+
         .scroll-top-btn {
             position: fixed; bottom: 25px; right: 25px; width: 42px; height: 42px;
             border-radius: 50%; background: var(--primary); color: white;
@@ -366,6 +410,11 @@
     </style>
 </head>
 <body>
+
+<div class="spinner-overlay" id="spinnerOverlay">
+    <div class="spinner"></div>
+    <div class="spinner-text">جار التحميل...</div>
+</div>
 
 <header class="site-header">
     <div class="header-inner">
@@ -449,6 +498,7 @@
     <div class="footer-inner">
         <div class="footer-links">
             <a href="#jackets">المنتجات</a>
+            <a href="#" id="trackOrderLink">تتبع الطلب</a>
             <a href="#" id="contactFooter">تواصل معنا</a>
         </div>
         <div>© 2026 Smart Chef Uniform — جميع الحقوق محفوظة</div>
@@ -585,6 +635,21 @@
     </div>
 </div>
 
+<div class="modal-overlay" id="trackerModal">
+    <div class="modal-content" style="max-width:500px">
+        <div class="modal-header">
+            <h3>📦 تتبع الطلب</h3>
+            <button class="icon-btn" id="closeTrackerBtn" style="border:none">✕</button>
+        </div>
+        <div class="tracker-form">
+            <p style="color:var(--text-muted);margin-bottom:15px;font-size:0.9rem">أدخل رقم الهاتف لمعرفة حالة طلبك</p>
+            <input type="tel" id="trackerPhone" placeholder="01XXXXXXXXX" maxlength="11">
+            <button class="btn btn-primary btn-block" id="trackerSearchBtn">🔍 بحث</button>
+            <div id="trackerResults" class="tracker-orders"></div>
+        </div>
+    </div>
+</div>
+
 <div class="admin-overlay" id="adminLoginOverlay">
     <div class="admin-box" style="max-width:400px;text-align:center">
         <div class="admin-title">🔐 لوحة التحكم</div>
@@ -607,8 +672,17 @@
             <button class="btn-admin-sm btn-admin-edit" id="adminLogoutBtn" style="padding:8px 16px">🚪 خروج</button>
         </div>
         <div class="admin-tabs">
-            <button class="admin-tab active" data-tab="adminProductsTab">📦 المنتجات</button>
+            <button class="admin-tab active" data-tab="adminDashboardTab">📊 الإحصائيات</button>
+            <button class="admin-tab" data-tab="adminProductsTab">📦 المنتجات</button>
             <button class="admin-tab" data-tab="adminOrdersTab">📋 الطلبات</button>
+        </div>
+        <div id="adminDashboardTab" class="admin-tab-content hidden">
+            <div class="admin-dashboard-stats">
+                <div class="admin-stat-card"><div class="admin-stat-num" id="statOrders">0</div><div class="admin-stat-label">إجمالي الطلبات</div></div>
+                <div class="admin-stat-card"><div class="admin-stat-num" id="statRevenue">0</div><div class="admin-stat-label">إجمالي الإيرادات</div></div>
+                <div class="admin-stat-card"><div class="admin-stat-num" id="statPending">0</div><div class="admin-stat-label">بانتظار التأكيد</div></div>
+                <div class="admin-stat-card"><div class="admin-stat-num" id="statProducts">0</div><div class="admin-stat-label">المنتجات</div></div>
+            </div>
         </div>
         <div id="adminProductsTab" class="admin-tab-content">
             <div class="admin-subtitle">إجمالي المنتجات: <span id="adminProductCount">0</span></div>
@@ -697,6 +771,10 @@
 </div>
 
 <div id="toastContainer"></div>
+<a class="whatsapp-float" href="https://wa.me/201212738655" target="_blank" title="تواصل معنا">
+    💬
+    <span class="tooltip">تواصل معنا واتساب</span>
+</a>
 <button class="admin-entry" id="adminEntry" title="لوحة التحكم">⚙️</button>
 <button class="scroll-top-btn" id="scrollTopBtn">↑</button>
 
@@ -828,6 +906,8 @@
             snap.forEach(d => products.push({ id: d.id, ...d.data() }));
             renderAllCategories();
             renderAdminProductList();
+            updateAdminDashboard();
+            setTimeout(() => document.getElementById("spinnerOverlay")?.classList.add("done"), 500);
         }, (e) => console.error("Firebase error:", e));
     }
 
@@ -854,9 +934,11 @@
     }
 
     function productCardHTML(p) {
+        const out = p.inStock === false;
         return `
-            <div class="product-card" data-id="${p.id}">
-                ${p.badge ? `<span class="product-badge badge-${p.badge}">${getBadgeText(p.badge)}</span>` : ""}
+            <div class="product-card ${out ? 'out-of-stock' : ''}" data-id="${p.id}">
+                ${p.badge && !out ? `<span class="product-badge badge-${p.badge}">${getBadgeText(p.badge)}</span>` : ""}
+                ${out ? '<span class="product-badge badge-out">⛔ نفذ</span>' : ""}
                 <img src="${p.image}" alt="${p.name}" class="product-image" loading="lazy" onerror="this.src='https://placehold.co/400x300/f5f5f5/999?text=No+Image'">
                 <div class="product-info">
                     <div class="product-brand">${p.brand || "Smart Chef"}</div>
@@ -869,7 +951,7 @@
                         </div>
                     </div>
                     <div class="product-actions">
-                        <button class="btn-add-cart" data-action="add-to-cart" data-id="${p.id}">🛒 أضف للسلة</button>
+                        <button class="btn-add-cart" data-action="add-to-cart" data-id="${p.id}" ${out ? 'disabled' : ''}>${out ? '⛔' : '🛒'} ${out ? 'غير متوفر' : 'أضف للسلة'}</button>
                         <button class="btn-wishlist ${wishlist.includes(p.id) ? 'active' : ''}" data-action="toggle-wishlist" data-id="${p.id}">♥</button>
                     </div>
                 </div>
@@ -946,6 +1028,7 @@
     function addToCart(pid) {
         const p = products.find(x => x.id == pid);
         if (!p) return;
+        if (p.inStock === false) { showToast("⛔ هذا المنتج غير متوفر حالياً", "warning"); return; }
         const exist = cart.find(i => i.id == pid);
         if (exist) { exist.qty++; }
         else { cart.push({ id: p.id, name: p.name, price: p.price, image: p.image, qty: 1 }); }
@@ -977,18 +1060,21 @@
     function openProductDetail(pid) {
         const p = products.find(x => x.id == pid);
         if (!p) return;
+        const out = p.inStock === false;
         document.getElementById("productModalBody").innerHTML = `
             <div><img src="${p.image}" class="modal-product-image" onerror="this.src='https://placehold.co/400x300/f5f5f5/999?text=?'"></div>
             <div>
+                ${out ? '<div style="background:#fce4ec;color:#c62828;padding:6px 12px;border-radius:8px;font-weight:700;font-size:0.8rem;margin-bottom:10px;display:inline-block">⛔ نفذ من المخزون</div>' : '<div style="background:#e8f5e9;color:#2e7d32;padding:6px 12px;border-radius:8px;font-weight:700;font-size:0.8rem;margin-bottom:10px;display:inline-block">✅ متوفر</div>'}
                 <div style="color:var(--primary);font-weight:700;margin-bottom:6px">${p.brand || "Smart Chef"}</div>
                 <h3 style="font-size:1.2rem;margin-bottom:8px">${p.name}</h3>
                 <div style="font-size:1.4rem;font-weight:800;margin-bottom:8px">${formatPrice(p.price)} ${p.oldPrice ? `<span style="text-decoration:line-through;color:var(--text-muted);font-size:0.9rem">${formatPrice(p.oldPrice)}</span>` : ""}</div>
                 <p style="color:var(--text-muted);margin-bottom:12px">${p.description || ""}</p>
                 <div style="display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px">${(p.specs || []).map(s => `<span class="spec-tag">${s}</span>`).join("")}</div>
                 ${(p.details || []).length ? `<div style="margin-bottom:12px">${p.details.map(d => `<div style="display:flex;gap:6px;font-size:0.85rem;padding:3px 0"><span style="font-weight:700">${d.label}:</span><span>${d.value}</span></div>`).join("")}</div>` : ""}
-                <div style="display:flex;gap:10px">
-                    <button class="btn btn-primary" data-action="add-to-cart" data-id="${p.id}" style="flex:1">🛒 أضف للسلة</button>
+                <div style="display:flex;gap:10px;flex-wrap:wrap">
+                    <button class="btn ${out ? 'btn-outline' : 'btn-primary'}" data-action="add-to-cart" data-id="${p.id}" style="flex:1" ${out ? 'disabled' : ''}>${out ? '⛔' : '🛒'} ${out ? 'غير متوفر' : 'أضف للسلة'}</button>
                     <button class="btn btn-outline" data-action="toggle-wishlist" data-id="${p.id}">♥</button>
+                    <button class="share-whatsapp" onclick="window.open('https://wa.me/?text=${encodeURIComponent(p.name + ' - ' + formatPrice(p.price) + ' - Smart Chef Uniform')}','_blank')">📤 مشاركة</button>
                 </div>
             </div>
         `;
@@ -1111,10 +1197,21 @@
         try { await deleteDoc(doc(db, "chef_products", id)); showToast("تم الحذف", "info"); }
         catch (e) { showToast("فشل الحذف", "error"); }
     }
+    async function toggleProductStock(id) {
+        const p = products.find(x => x.id == id);
+        if (!p) return;
+        const newVal = p.inStock === false;
+        try {
+            await updateDoc(doc(db, "chef_products", id), { inStock: newVal });
+            showToast(newVal ? "✅ تم تفعيل المنتج" : "⛔ تم تعطيل المنتج");
+        } catch (e) { showToast("فشل التحديث", "error"); }
+    }
     function updateOrderStatus(id, status) {
         const order = orders.find(o => o.id === id);
         if (!order) return;
-        updateDoc(doc(db, "chef_orders", id), { status }).then(() => {
+        const history = order.statusHistory || [];
+        history.push({ status, date: new Date().toISOString(), by: "admin" });
+        updateDoc(doc(db, "chef_orders", id), { status, statusHistory: history }).then(() => {
             showToast(`✅ تغيرت الحالة إلى: ${status}`);
         }).catch(e => showToast("فشل تغيير الحالة", "error"));
     }
@@ -1134,10 +1231,13 @@
         if (count) count.textContent = products.length;
         if (!list) return;
         list.innerHTML = products.map(p => `
-            <div class="admin-product-item">
+            <div class="admin-product-item ${p.inStock === false ? 'out-of-stock' : ''}">
                 <img src="${p.image}" onerror="this.src='https://placehold.co/45'">
-                <div style="flex:1"><strong>${p.name}</strong> <span style="color:var(--primary);font-weight:700">${formatPrice(p.price)}</span></div>
-                <div class="admin-item-actions">
+                <div style="flex:1"><strong>${p.name}</strong> <span style="color:var(--primary);font-weight:700">${formatPrice(p.price)}</span>
+                    <span style="font-size:0.75rem;color:var(--text-muted);display:block">${p.inStock === false ? '⛔ نفذ من المخزون' : '✅ متوفر'}</span>
+                </div>
+                <div class="admin-item-actions" style="flex-wrap:wrap">
+                    <button class="btn-admin-sm ${p.inStock === false ? 'btn-admin-edit' : 'btn-admin-delete'}" data-action="toggle-stock" data-id="${p.id}">${p.inStock === false ? '📦 تفعيل' : '⛔ تعطيل'}</button>
                     <button class="btn-admin-sm btn-admin-edit" data-action="edit-admin" data-id="${p.id}">✏️</button>
                     <button class="btn-admin-sm btn-admin-delete" data-action="delete-admin" data-id="${p.id}">🗑️</button>
                 </div>
@@ -1193,7 +1293,7 @@
             details: parseDetails(document.getElementById("adminDetails").value),
             description: document.getElementById("adminDescription").value.trim(),
             badge: document.getElementById("adminBadge").value || null,
-            inStock: true,
+            inStock: editId ? (products.find(p => p.id === editId)?.inStock ?? true) : true,
             image: finalImage
         };
         if (!data.name || !data.price) { showToast("⚠️ الاسم والسعر مطلوبان", "warning"); return; }
@@ -1249,6 +1349,7 @@
             case "toggle-wishlist": e.stopPropagation(); toggleWishlistItem(pid); break;
             case "update-qty": e.stopPropagation(); updateQty(pid, change); break;
             case "remove-from-cart": e.stopPropagation(); removeFromCart(pid); break;
+            case "toggle-stock": e.stopPropagation(); toggleProductStock(pid); break;
             case "edit-admin": e.stopPropagation(); editAdminProduct(pid); break;
             case "delete-admin": e.stopPropagation(); deleteProductFromFirestore(pid); break;
         }
@@ -1260,7 +1361,23 @@
             orders = [];
             snap.forEach(d => orders.push({ id: d.id, ...d.data() }));
             renderAdminOrders();
+            updateAdminDashboard();
+            setTimeout(() => document.getElementById("spinnerOverlay")?.classList.add("done"), 500);
         }, (e) => console.error("Orders error:", e));
+    }
+    function updateAdminDashboard() {
+        const sOrders = document.getElementById("statOrders");
+        const sRevenue = document.getElementById("statRevenue");
+        const sPending = document.getElementById("statPending");
+        const sProducts = document.getElementById("statProducts");
+        if (!sOrders) return;
+        const totalOrders = orders.length;
+        const totalRevenue = orders.reduce((s, o) => s + (o.total || 0), 0);
+        const pending = orders.filter(o => o.status === "جديد" || !o.status).length;
+        sOrders.textContent = totalOrders;
+        sRevenue.textContent = formatPrice(totalRevenue).replace(/[٠-٩]/g, '');
+        sPending.textContent = pending;
+        sProducts.textContent = products.length;
     }
     function renderAdminOrders() {
         const container = document.getElementById("adminOrdersList");
@@ -1294,9 +1411,32 @@
                             <option value="ملغي" ${o.status === "ملغي" ? "selected" : ""}>ملغي</option>
                         </select>
                     </div>
+                    ${o.statusHistory && o.statusHistory.length ? `<details style="margin-top:6px;font-size:0.75rem;color:var(--text-muted);cursor:pointer"><summary style="font-weight:600">📜 السجل</summary>${o.statusHistory.slice().reverse().map(h => `<div style="padding:2px 0">• ${h.status} — ${new Date(h.date).toLocaleString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>`).join("")}</details>` : ""}
                 </div>
             `;
         }).join("");
+    }
+
+    function searchOrders() {
+        const phone = document.getElementById("trackerPhone").value.trim();
+        const container = document.getElementById("trackerResults");
+        if (!/^01[0-9]{9}$/.test(phone)) { showToast("رقم هاتف غير صحيح", "warning"); return; }
+        const found = orders.filter(o => o.phone === phone);
+        if (!found.length) { container.innerHTML = '<p style="color:var(--text-muted);padding:15px">❌ لا توجد طلبات لهذا الرقم</p>'; return; }
+        const statusMap = { "جديد": "new", "مؤكد": "confirmed", "قيد التجهيز": "processing", "تم الشحن": "shipped", "تم التوصيل": "delivered", "ملغي": "cancelled" };
+        container.innerHTML = found.slice().reverse().map(o => `
+            <div class="tracker-order">
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                    <strong>📋 ${o.code || "—"}</strong>
+                    <span class="order-status status-${statusMap[o.status] || 'new'}">${o.status || "جديد"}</span>
+                </div>
+                <div style="font-size:0.85rem;color:var(--text-muted)">${o.date ? new Date(o.date).toLocaleDateString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric' }) : "—"}</div>
+                <div style="font-size:0.85rem">${(o.items || []).map(i => `${i.name} × ${i.qty}`).join("، ")}</div>
+                <div style="font-weight:700;color:var(--primary);margin-top:4px">💰 ${formatPrice(o.total)}</div>
+                ${o.statusHistory && o.statusHistory.length ? `<details style="margin-top:6px;font-size:0.75rem;color:var(--text-muted)"><summary>سجل التحديثات</summary>${o.statusHistory.slice().reverse().map(h => `<div>• ${h.status} — ${new Date(h.date).toLocaleString("ar-EG", { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</div>`).join("")}</details>` : ""}
+                <div style="font-size:0.75rem;color:var(--text-muted);margin-top:4px">${o.paymentMethod === "cod" ? "💵 الدفع عند الاستلام" : "💳 فودافون كاش"}</div>
+            </div>
+        `).join("");
     }
 
     function bindEvents() {
@@ -1334,6 +1474,12 @@
         document.getElementById("copyWalletBtn").addEventListener("click", copyWalletNumber);
         document.getElementById("finishOrderBtn").addEventListener("click", finishOrder);
 
+        document.getElementById("trackOrderLink")?.addEventListener("click", e => { e.preventDefault(); document.getElementById("trackerModal").classList.add("active"); });
+        document.getElementById("contactFooter")?.addEventListener("click", e => { e.preventDefault(); window.open("https://wa.me/201212738655", "_blank"); });
+        document.getElementById("closeTrackerBtn")?.addEventListener("click", () => document.getElementById("trackerModal").classList.remove("active"));
+        document.getElementById("trackerSearchBtn")?.addEventListener("click", searchOrders);
+        document.getElementById("trackerPhone")?.addEventListener("keydown", e => { if (e.key === "Enter") searchOrders(); });
+
         document.getElementById("searchInput")?.addEventListener("input", filterProducts);
         document.getElementById("sortSelect")?.addEventListener("change", filterProducts);
         document.querySelectorAll('input[name="paymentMethod"]').forEach(r => {
@@ -1362,6 +1508,7 @@
         });
         document.getElementById("closeProductModal").addEventListener("click", closeProductModal);
         document.getElementById("productModal").addEventListener("click", e => { if (e.target === e.currentTarget) closeProductModal(); });
+        document.getElementById("trackerModal")?.addEventListener("click", e => { if (e.target === e.currentTarget) document.getElementById("trackerModal").classList.remove("active"); });
 
         document.querySelectorAll(".chip").forEach(chip => {
             chip.addEventListener("click", () => {
